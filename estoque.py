@@ -27,9 +27,10 @@ class QuantidadeInvalidaError(EstoqueError):
 
 class PedidoRecusadoError(EstoqueError):
 
-    def __init__(self, indice):
-        super().__init__("Produto recusado")
+    def __init__(self, indice,codigo):
+        super().__init__("Pedido recusado")
         self.indice = indice
+        self.codigo = codigo
 
 @dataclass( frozen=True)
 class Produto:
@@ -99,12 +100,23 @@ class Estoque:
 
 
 
-def processar_pedido(estoque: Estoque, itens: list[tuple[str, int]]):
-    pass
+def processar_pedido(estoque: Estoque, itens: list[tuple[str, int]]):    
+    with estoque.transacao():
+        for indice, (codigo, quantidade) in enumerate(itens):
+            try:            
+                estoque.remover(codigo, quantidade)
+            except EstoqueError as e:  
+                raise PedidoRecusadoError(indice, codigo) from e               
+        
         
 #testes manuais
 if __name__ == "__main__":
     estoque1 = Estoque()
+
+    lista_pedido = [
+        ("PR1",100),
+        ("PR2",1),
+    ]
 
     estoque1.adicionar(Produto("PR1","PRODUTO1",10),32)
     estoque1.adicionar(Produto("PR1","PRODUTO1",10),12)
@@ -142,6 +154,13 @@ if __name__ == "__main__":
     except EstoqueInsuficienteError as e:
         print("Erro:", e)
     print(estoque1.quantidades)
+
+    try:
+        processar_pedido(estoque1, lista_pedido)
+        print(estoque1.quantidades)
+    except PedidoRecusadoError as e:
+        print(f"{e} produto: {e.codigo} posição: {e.indice + 1} - {e.__cause__}")
+        print(estoque1.quantidades)
 
 
 
