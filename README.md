@@ -85,5 +85,5 @@ pytest -v
 - [x] `Estoque`: `adicionar`, `remover`, `quantidade`, `valor_total`, `__contains__`
 - [x] `transacao()` com rollback
 - [x] `processar_pedido`
-- [ ] Testes com pytest
+- [x] Testes com pytest
 - [ ] Bônus: notificação de estoque baixo com `Mock`

@@ -5,7 +5,8 @@ from estoque import Estoque, EstoqueError, EstoqueInsuficienteError, PedidoRecus
 @pytest.mark.parametrize("codigo, nome, preco",
     [
         ("PR1", "Produto1", -1),
-        ("PR2", "Produto2", -10)
+        ("PR2", "Produto2", -10),
+        ("PR2", "Produto2", 0)
     ]    
 )
 def test_produto_preco_Invalido(codigo, nome, preco):
@@ -24,9 +25,9 @@ def test_adicionar_produto(estoque_vazio: Estoque):
 
 def test_adicionar_produto_quantidade_invalida(estoque_vazio): 
     with pytest.raises(QuantidadeInvalidaError) as exc_info:
-        estoque_vazio.adicionar(Produto("PR1-TESTE","PRODUTO TESTE", 15.69), -10)
+        estoque_vazio.adicionar(Produto("PR1-TESTE","PRODUTO TESTE", 15.69), 0)
 
-    assert exc_info.value.quantidade == -10
+    assert exc_info.value.quantidade == 0
 
 def test_remover_produto(estoque: Estoque):
     estoque.remover("PR1", 10)
