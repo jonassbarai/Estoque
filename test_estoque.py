@@ -1,5 +1,5 @@
 import pytest
-from estoque import Estoque, EstoqueInsuficienteError, Produto, ProdutoNaoEncontradoError, QuantidadeInvalidaError
+from estoque import Estoque, EstoqueInsuficienteError, PedidoRecusadoError, Produto, ProdutoNaoEncontradoError, QuantidadeInvalidaError, processar_pedido
 
 
 def test_adicionar_produto(estoque_vazio: Estoque):
@@ -36,7 +36,66 @@ def test_remover_produto_estoque_insuficiente(estoque: Estoque):
             estoque.remover("PR1", 1000)
     assert exc_info.value.codigo == "PR1"
     assert exc_info.value.disponivel == 30
-    assert exc_info.value.solicitado == 1000    
+    assert exc_info.value.solicitado == 1000 
+
+@pytest.mark.parametrize("codigo, quantidade_esperada",
+    [
+        ("PR1", 30),
+        ("PR2", 5),
+    ]    
+)
+def test_quantidade(estoque: Estoque, codigo: str, quantidade_esperada: int):
+    quantidade = estoque.quantidade(codigo)
+    assert quantidade == quantidade_esperada
+
+def test_quantidade_produto_nao_encontrado(estoque: Estoque):
+    with pytest.raises(ProdutoNaoEncontradoError) as exc_info:
+        estoque.quantidade("PR100")
+    assert exc_info.value.codigo == "PR100"
+
+@pytest.mark.parametrize("codigo, valor_esperado",
+    [
+        ("PR1", True),
+        ("PR2", True),
+        ("PR100", False)
+    ]    
+)
+def test_contains(estoque: Estoque, codigo: str, valor_esperado):
+    encotrado = codigo in estoque
+
+    assert encotrado == valor_esperado
+
+def test_processar_pedido(estoque: Estoque):
+
+    lista_pedido = [
+        ("PR1",5),
+        ("PR2",1),
+    ]
+
+    processar_pedido(estoque, lista_pedido)
+
+    assert estoque.quantidades == {"PR1": 25, "PR2":4}
+
+def test_processar_pedido_pedido_recusado(estoque: Estoque):
+
+    lista_pedido = [
+        ("PR1",100),
+        ("PR2",1),
+    ]
+
+    with pytest.raises(PedidoRecusadoError) as exc_info:
+        processar_pedido(estoque, lista_pedido)
+
+    assert estoque.quantidades == {"PR1": 30, "PR2":5}
+
+    assert exc_info.value.codigo == "PR1"  
+    assert exc_info.value.indice == 0   
+        
+
+
+
+    
+    
 
 
     
