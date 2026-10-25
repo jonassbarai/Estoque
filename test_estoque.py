@@ -2,6 +2,17 @@ import pytest
 from estoque import Estoque, EstoqueError, EstoqueInsuficienteError, PedidoRecusadoError, Produto, ProdutoNaoEncontradoError, QuantidadeInvalidaError, processar_pedido
 
 
+@pytest.mark.parametrize("codigo, nome, preco",
+    [
+        ("PR1", "Produto1", -1),
+        ("PR2", "Produto2", -10)
+    ]    
+)
+def test_produto_preco_Invalido(codigo, nome, preco):
+    with pytest.raises(ValueError):
+        Produto(codigo, nome,preco)
+
+
 def test_adicionar_produto(estoque_vazio: Estoque):
     produto = Produto("PR1-TESTE","PRODUTO TESTE", 15.69)
     estoque_vazio.adicionar(produto, 10)
