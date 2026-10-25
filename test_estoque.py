@@ -1,5 +1,5 @@
 import pytest
-from estoque import Estoque, EstoqueInsuficienteError, PedidoRecusadoError, Produto, ProdutoNaoEncontradoError, QuantidadeInvalidaError, processar_pedido
+from estoque import Estoque, EstoqueError, EstoqueInsuficienteError, PedidoRecusadoError, Produto, ProdutoNaoEncontradoError, QuantidadeInvalidaError, processar_pedido
 
 
 def test_adicionar_produto(estoque_vazio: Estoque):
@@ -76,11 +76,17 @@ def test_processar_pedido(estoque: Estoque):
 
     assert estoque.quantidades == {"PR1": 25, "PR2":4}
 
-def test_processar_pedido_pedido_recusado(estoque: Estoque):
+
+@pytest.mark.parametrize("item_falho, tipo_causa", [
+    (("PR2", 1000), EstoqueInsuficienteError),  
+    (("PR2",-1000), QuantidadeInvalidaError),
+    (("PR100", 10) , ProdutoNaoEncontradoError),        
+])
+def test_processar_pedido_pedido_recusado(estoque: Estoque, item_falho: Produto, tipo_causa: type[EstoqueError]):
 
     lista_pedido = [
-        ("PR1",100),
-        ("PR2",1),
+        ("PR1",1),
+        (item_falho),
     ]
 
     with pytest.raises(PedidoRecusadoError) as exc_info:
@@ -88,8 +94,10 @@ def test_processar_pedido_pedido_recusado(estoque: Estoque):
 
     assert estoque.quantidades == {"PR1": 30, "PR2":5}
 
-    assert exc_info.value.codigo == "PR1"  
-    assert exc_info.value.indice == 0   
+    assert exc_info.value.codigo == item_falho[0]  
+    assert exc_info.value.indice == 1 
+    assert isinstance(exc_info.value.__cause__, tipo_causa)
+
         
 
 
